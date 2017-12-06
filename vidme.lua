@@ -127,26 +127,32 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   end
 
   local function adduser(userurl)
-    disco_users[string.match(userurl, "([^/]+)$")] = true
+    if userurl ~= nil then
+      disco_users[string.match(userurl, "([^/]+)$")] = true
+    end
   end
 
   local function addtags(comment)
-    for tag in string.gmatch(comment, "#([a-zA-Z][0-9a-zA-Z%-_%.]*)") do
-      disco_tags[tag] = true
+    if comment ~= nil then
+      for tag in string.gmatch(comment, "#([a-zA-Z][0-9a-zA-Z%-_%.]*)") do
+        disco_tags[tag] = true
+      end
     end
   end
 
   local function pagination(html, start, middle, end_, offset, limit, key)
     local data = load_json_file(html)
-    offset = tonumber(offset)
-    for k, v in pairs(data[key]) do
-      offset = offset + 1
-      adduser(v["user"]["full_url"])
-      if key == "comments" then
-        addtags(v["body"])
+    if data ~= nil and data["status"] == true then
+      offset = tonumber(offset)
+      for k, v in pairs(data[key]) do
+        offset = offset + 1
+        adduser(v["user"]["full_url"])
+        if key == "comments" then
+          addtags(v["body"])
+        end
       end
+      check(start .. tostring(offset) .. middle .. limit .. end_)
     end
-    check(start .. tostring(offset) .. middle .. limit .. end_)
   end
 
   if string.match(url, "^https?://api%.vid%.me/") then
@@ -157,7 +163,9 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     check(string.match(url, "^(https?://)") .. "api.vid.me" .. string.match(url, "^https?://[^/]*/api(/.+)$"))
   end
 
-  if allowed(url, nil) and not string.match(url, "^https?://[^/]*cloudfront%.net") then
+  if allowed(url, nil) and not string.match(url, "^https?://[^/]*cloudfront%.net")
+     and not ((status_code == 400 or status_code == 403 or status_code == 404)
+              and string.match(url, "^https?://api%.vid%.me/video/[0-9]+")) then
     html = read_file(file)
 
     if string.match(url, "^https?://vid%.me/e/[0-9a-zA-Z]+") then
@@ -183,9 +191,14 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
 
     if string.match(url, "^https?://api%.vid%.me/video/[0-9]+$") then
       local data = load_json_file(html)
-      if data["status"] == true then
+      if data["status"] == true and data["video"]["state"] ~= "deleted" then
+        if data["video"]["state"] ~= "success" then
+          abortgrab = true
+        end
         identifiers[string.match(data["video"]["full_url"], "([0-9a-zA-Z]+)$")] = true
-        adduser(data["video"]["user"]["full_url"])
+        if data["video"]["user"] ~= nil then
+          adduser(data["video"]["user"]["full_url"])
+        end
         addtags(data["video"]["description"])
         check(string.gsub(data["video"]["thumbnail_ai"], "{}", "120x"))
         check(string.gsub(data["video"]["thumbnail_ai"], "{}", "405x"))
@@ -242,9 +255,15 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
     io.stdout:write("ABORTING...\n")
     return wget.actions.ABORT
   end
-  
+
+  if (status_code == 400 or status_code == 404)
+     and string.match(url["url"], "^https?://api%.vid%.me/video/[0-9]+") then
+print(url["url"])
+    return wget.actions.EXIT
+  end
+ 
   if status_code >= 500 or
-    (status_code >= 400 and status_code ~= 404 and status_code ~= 403) or
+    (status_code >= 401 and status_code ~= 404 and status_code ~= 403) or
     status_code == 0 then
     io.stdout:write("Server returned "..http_stat.statcode.." ("..err.."). Sleeping.\n")
     io.stdout:flush()
