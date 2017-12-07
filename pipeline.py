@@ -69,7 +69,7 @@ if not WGET_LUA:
 #
 # Update this each time you make a non-cosmetic change.
 # It will be added to the WARC files and reported to the tracker.
-VERSION = "20171206.04"
+VERSION = "20171206.06"
 USER_AGENT = 'ArchiveTeam'
 TRACKER_ID = 'vidme'
 TRACKER_HOST = 'tracker.archiveteam.org'
@@ -173,7 +173,7 @@ class DeduplicateWarc(SimpleTask):
             http_headers=record.http_headers
         )
 
-    def process_record(self, writer, record, out):
+    def process_record(self, writer, record, out, records):
         if record.rec_headers.get_header('WARC-Type') == 'response':
             record_url = record.rec_headers.get_header('WARC-Target-URI')
             record_digest = record.rec_headers.get_header('WARC-Payload-Digest')
@@ -181,12 +181,12 @@ class DeduplicateWarc(SimpleTask):
             record_id = record.rec_headers.get_header('WARC-Record-ID')
             print('Deduplicating digest ' + record_digest + ', url ' + record_url)
 
-            if record_digest in self.records:
+            if record_digest in records:
                 print('Found duplicate, writing revisit record.')
                 return self.create_revisit_record(writer, record,
-                                                  self.records[record_digest])
+                                                  records[record_digest])
             else:
-                self.records[record_digest] = {
+                records[record_digest] = {
                     'url': record_url,
                     'date': record_date,
                     'id': record_id
@@ -196,7 +196,8 @@ class DeduplicateWarc(SimpleTask):
             return record
 
     def process(self, item):
-        self.records = {}
+        records = {}
+        num_records = 0
 
         filename_in = '%(item_dir)s/%(warc_file_base)s.warc.gz' % item
         filename_out = '%(data_dir)s/%(warc_file_base)s.warc.gz' % item
@@ -205,8 +206,13 @@ class DeduplicateWarc(SimpleTask):
             with open(filename_out, 'wb') as file_out:
                 writer = WARCWriter(filebuf=file_out, gzip=True)
                 for record in ArchiveIterator(file_in):
+                    num_records += 1
                     writer.write_record(self.process_record(writer, record,
-                                                            filename_out))
+                                                            filename_out,
+                                                            records))
+
+        print('Processed {} payloads, found {} unique payloads.'
+              .format(num_records, len(records)))
 
 def get_hash(filename):
     with open(filename, 'rb') as in_file:
@@ -321,7 +327,7 @@ pipeline = Pipeline(
         id_function=stats_id_function,
     ),
     MoveFiles(),
-    LimitConcurrent(NumberConfigValue(min=1, max=20, default="20",
+    LimitConcurrent(NumberConfigValue(min=1, max=20, default="1",
         name="shared:rsync_threads", title="Rsync threads",
         description="The maximum number of concurrent uploads."),
         UploadWithTracker(
