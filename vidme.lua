@@ -165,7 +165,8 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
 
   if allowed(url, nil) and not string.match(url, "^https?://[^/]*cloudfront%.net")
      and not ((status_code == 400 or status_code == 403 or status_code == 404)
-              and string.match(url, "^https?://api%.vid%.me/video/[0-9]+")) then
+              and (string.match(url, "^https?://api%.vid%.me/video/[0-9]+") or
+                   string.match(url, "^https?://vid%.me/api/video/[0-9]+"))) then
     html = read_file(file)
 
     if string.match(url, "^https?://vid%.me/e/[0-9a-zA-Z]+") then
@@ -257,8 +258,8 @@ wget.callbacks.httploop_result = function(url, err, http_stat)
   end
 
   if (status_code == 400 or status_code == 404)
-     and string.match(url["url"], "^https?://api%.vid%.me/video/[0-9]+") then
-print(url["url"])
+     and (string.match(url["url"], "^https?://api%.vid%.me/video/[0-9]+") or
+          string.match(url["url"], "^https?://vid%.me/api/video/[0-9]+")) then
     return wget.actions.EXIT
   end
  
