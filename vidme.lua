@@ -170,7 +170,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
       abortgrab = true
       io.stdout:write("You are banned temporarily.\n")
       io.stdout:write("Sleeping 10 minutes and aborting...\n")
-      os.execute("sleep 600")
+      os.execute("sleep 1200")
     end
 
     if string.match(url, "^https?://vid%.me/e/[0-9a-zA-Z]+") then
