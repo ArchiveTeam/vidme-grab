@@ -166,7 +166,7 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
   if allowed(url, nil) and not string.match(url, "^https?://[^/]*cloudfront%.net") then
     html = read_file(file)
 
-    if string.match(url, "<title>403 Forbidden</title>") then
+    if string.match(html, "<title>403 Forbidden</title>") then
       abortgrab = true
       io.stdout:write("You are banned temporarily.\n")
       io.stdout:write("Sleeping 10 minutes and aborting...\n")
