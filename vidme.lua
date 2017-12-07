@@ -263,7 +263,7 @@ print(url["url"])
   end
  
   if status_code >= 500 or
-    (status_code >= 401 and status_code ~= 404 and status_code ~= 403) or
+    (status_code >= 400 and status_code ~= 404 and status_code ~= 403) or
     status_code == 0 then
     io.stdout:write("Server returned "..http_stat.statcode.." ("..err.."). Sleeping.\n")
     io.stdout:flush()
