@@ -69,7 +69,7 @@ if not WGET_LUA:
 #
 # Update this each time you make a non-cosmetic change.
 # It will be added to the WARC files and reported to the tracker.
-VERSION = "20171206.07"
+VERSION = "20171207.01"
 USER_AGENT = 'ArchiveTeam'
 TRACKER_ID = 'vidme'
 TRACKER_HOST = 'tracker.archiveteam.org'
@@ -240,6 +240,7 @@ class WgetArgs(object):
             "-U", USER_AGENT,
             "-nv",
             "--no-cookies",
+            "--content-on-error",
             "--lua-script", "vidme.lua",
             "-o", ItemInterpolation("%(item_dir)s/wget.log"),
             "--no-check-certificate",

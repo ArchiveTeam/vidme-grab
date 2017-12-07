@@ -163,11 +163,15 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
     check(string.match(url, "^(https?://)") .. "api.vid.me" .. string.match(url, "^https?://[^/]*/api(/.+)$"))
   end
 
-  if allowed(url, nil) and not string.match(url, "^https?://[^/]*cloudfront%.net")
-     and not ((status_code == 400 or status_code == 403 or status_code == 404)
-              and (string.match(url, "^https?://api%.vid%.me/video/[0-9]+") or
-                   string.match(url, "^https?://vid%.me/api/video/[0-9]+"))) then
+  if allowed(url, nil) and not string.match(url, "^https?://[^/]*cloudfront%.net") then
     html = read_file(file)
+
+    if string.match(url, "<title>403 Forbidden</title>") then
+      abortgrab = true
+      io.stdout:write("You are banned temporarily.\n")
+      io.stdout:write("Sleeping 10 minutes and aborting...\n")
+      os.execute("sleep 600")
+    end
 
     if string.match(url, "^https?://vid%.me/e/[0-9a-zA-Z]+") then
       base = string.match(url, "^(https?://vid%.me/e/[0-9a-zA-Z]+)")
@@ -194,7 +198,8 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
       local data = load_json_file(html)
       if data["status"] == true and data["video"]["state"] ~= "deleted"
          and data["video"]["state"] ~= "suspended"
-         and data["video"]["state"] ~= "user-disabled" then
+         and data["video"]["state"] ~= "user-disabled"
+         and data["video"]["state"] ~= "reserved" then
         if data["video"]["state"] ~= "success" then
           abortgrab = true
         end
