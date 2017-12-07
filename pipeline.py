@@ -69,7 +69,7 @@ if not WGET_LUA:
 #
 # Update this each time you make a non-cosmetic change.
 # It will be added to the WARC files and reported to the tracker.
-VERSION = "20171206.03"
+VERSION = "20171206.04"
 USER_AGENT = 'ArchiveTeam'
 TRACKER_ID = 'vidme'
 TRACKER_HOST = 'tracker.archiveteam.org'
@@ -155,7 +155,6 @@ class MoveFiles(SimpleTask):
 class DeduplicateWarc(SimpleTask):
     def __init__(self):
         SimpleTask.__init__(self, "DeduplicateWarc")
-        self.records = {}
 
     def create_revisit_record(self, writer, record, data):
         warc_headers = record.rec_headers
@@ -197,6 +196,8 @@ class DeduplicateWarc(SimpleTask):
             return record
 
     def process(self, item):
+        self.records = {}
+
         filename_in = '%(item_dir)s/%(warc_file_base)s.warc.gz' % item
         filename_out = '%(data_dir)s/%(warc_file_base)s.warc.gz' % item
 

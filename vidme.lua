@@ -192,7 +192,8 @@ wget.callbacks.get_urls = function(file, url, is_css, iri)
 
     if string.match(url, "^https?://api%.vid%.me/video/[0-9]+$") then
       local data = load_json_file(html)
-      if data["status"] == true and data["video"]["state"] ~= "deleted" then
+      if data["status"] == true and data["video"]["state"] ~= "deleted"
+         and data["video"]["state"] ~= "suspended" then
         if data["video"]["state"] ~= "success" then
           abortgrab = true
         end
