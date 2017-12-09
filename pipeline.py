@@ -69,7 +69,7 @@ if not WGET_LUA:
 #
 # Update this each time you make a non-cosmetic change.
 # It will be added to the WARC files and reported to the tracker.
-VERSION = "20171208.01"
+VERSION = "20171209.01"
 USER_AGENT = 'ArchiveTeam'
 TRACKER_ID = 'vidme'
 TRACKER_HOST = 'tracker.archiveteam.org'
@@ -322,7 +322,7 @@ pipeline = Pipeline(
         defaults={"downloader": downloader, "version": VERSION},
         file_groups={
             "data": [
-                ItemInterpolation("%(item_dir)s/%(warc_file_base)s.warc.gz")
+                ItemInterpolation("%(data_dir)s/%(warc_file_base)s.warc.gz")
             ]
         },
         id_function=stats_id_function,
