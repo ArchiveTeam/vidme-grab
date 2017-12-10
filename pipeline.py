@@ -74,6 +74,11 @@ USER_AGENT = 'ArchiveTeam'
 TRACKER_ID = 'vidme2'
 TRACKER_HOST = 'tracker.archiveteam.org'
 
+###########################################################################
+# Settings configurable via --context-value
+#
+if "WGET_THREADS" not in locals():
+    WGET_THREADS = "4"
 
 ###########################################################################
 # This section defines project-specific tasks.
@@ -306,7 +311,7 @@ pipeline = Pipeline(
     GetItemFromTracker("http://%s/%s" % (TRACKER_HOST, TRACKER_ID), downloader,
         VERSION),
     PrepareDirectories(warc_prefix="vidme"),
-	LimitConcurrent(NumberConfigValue(min=1, max=20, default="4",
+	LimitConcurrent(NumberConfigValue(min=1, max=20, default=WGET_THREADS,
         name="shared:wget_threads", title="Wget threads",
         description="The maximum number of concurrent downloads."),
 		WgetDownload(
